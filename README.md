@@ -12,3 +12,4 @@ Graphical user interface for ULTRACOV ultrasound video analysis.
 8. Wait for download and installation
 9. Execute GUI: $ _python ultracov-GUI.py_
 10. Wait for required files to download (only when executed for the first time)
+11. Select directory containing .bin videos to be analysed
