@@ -10,14 +10,9 @@ from PIL import Image
 import cv2
 import io
 import os
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
 from file_functions import BinFile, Dataset
-from dev_motion_detector_bin import motion_detection
-from dev_mask_generator import load_model, load_img, predict
-from dev_similarity import init_similarity, find_similar, compare_plot
 
 
 

@@ -7,23 +7,14 @@ Created on Wed Apr 21 12:11:46 2021
 
 # # ULTRACOV FINDER
 # ## LOAD LIBRARIES
-import cv2
 import os
 import numpy as np
 import tensorflow as tf
-import pandas as pd
-from sklearn.neighbors import NearestNeighbors
 #from CV_IO_utils import read_imgs_dir
 #from CV_transform_utils import apply_transformer, resize_img, normalize_img
 #from CV_plot_utils import plot_query_retrieval, plot_tsne, plot_reconstructions, plot_img
 #from autoencoder3 import AutoEncoder
 import matplotlib.pyplot as plt
-
-from contextlib import redirect_stdout
-from skimage.transform import resize
-import time
-import random
-from file_functions import BinFile, Dataset  #From Jorge to read bin files
 
 
 

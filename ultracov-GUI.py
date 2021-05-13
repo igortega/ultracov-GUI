@@ -10,22 +10,16 @@ Created on Tue Mar 16 10:12:59 2021
 
 
 import PySimpleGUI as sg
-from PIL import Image
 import cv2
-import io
 import os
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from skimage import measure
-import time
 
-from file_functions import BinFile, Dataset
 from motion_detector_bin import motion_detection
 from mask_generator import load_model, load_img, predict, blend_mask
 from similarity import init_similarity, find_similar
 from frame_quality import analyze_frame, is_valid
-from video_player import get_img_data, bscan_resize, load_video_data
+from video_player import get_img_data, load_video_data
 
     
 
@@ -130,8 +124,8 @@ if __name__=='__main__':
     
     
     # Initialiaze pleura segmentation and similarity models
-    pleura_model = load_model('pleura_model.h5')
-    pleura_square_model = load_model('pleura_square_model.h5')
+    pleura_model = load_model('pleura/pleura_model.h5')
+    pleura_square_model = load_model('pleura/pleura_square_model.h5')
     encoder, database_display, database_encoded, database_filenames = init_similarity()
 
     
