@@ -29,7 +29,7 @@ from video_player import get_img_data, load_video_data
 ##  AUXILIAR FUNCTIONS
 def get_files():
     # download required files
-    url = 'url'
+    url = 'https://drive.google.com/file/d/1I3ymNAAhsQ70cxNbQO7zqli_jtsdJrov/view?usp=sharing'
     urlretrieve(url, 'required_files.zip')
     
     zfile = ZipFile('required_files.zip')
