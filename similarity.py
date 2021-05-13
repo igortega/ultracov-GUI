@@ -57,7 +57,7 @@ def init_similarity():
             - database_filenames: numpy array shaped (number_images,) """
             
     # ## LOAD ENCODER
-    inpDir = r'C:\Principal\ultracov\similarity'
+    inpDir = 'similarity'
     modelName="convAE"
     encoderFile = os.path.join(inpDir, "{}_encoder_v2.h5".format(modelName))   
     encoder = tf.keras.models.load_model(encoderFile)
