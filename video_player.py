@@ -5,6 +5,8 @@ Created on Wed Apr 28 13:58:48 2021
 @author: Ignacio
 """
 
+" Video display functions "
+
 import PySimpleGUI as sg
 from PIL import Image
 import cv2

@@ -5,6 +5,8 @@ Created on Wed Apr 21 12:11:46 2021
 @author: Ignacio
 """
 
+" Similar image search "
+
 # # ULTRACOV FINDER
 # ## LOAD LIBRARIES
 import os
