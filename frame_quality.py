@@ -29,7 +29,7 @@ def analyze_frame(frame, mask):
 
 
 
-def is_valid(frame_histogram, mask_labels, mask_regions):
+def is_valid(mask_labels, mask_regions):
     " Defines image quality criteria. Returns True/False "
     
     valid = True
