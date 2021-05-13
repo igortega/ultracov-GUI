@@ -77,12 +77,12 @@ def load_database(selected_video):
         database = pd.read_csv(os.path.join(labels_dir, database_fname), sep=';', index_col=0)
         if str(database['comment'][0]) == 'nan':
             database.iloc[0,-1] = ''
-        return database
+        return database, True # Exists previous data
     # Blank database
     else:
         database = label_df.copy()
         database.index = [selected_video]
-        return database
+        return database, False # Does not exist previous data
     
 
 
@@ -94,7 +94,7 @@ if __name__=='__main__':
     if not os.path.exists('required_files.zip'):
         get_files()
 
-
+    
     # Read list of .bin videos in selected directory
     videos_dir = 'videos'
     try:
@@ -176,7 +176,8 @@ if __name__=='__main__':
     
     
     image_display = [sg.Image(key='display', 
-                              data=get_img_data(cv2.imread('logo.png')[:,:,0]))]
+                              filename='logo.png',
+                              background_color='#eeeeee')]
     
     
     quality_bar = [sg.T('Image quality'), sg.ProgressBar(1, 
@@ -236,14 +237,16 @@ if __name__=='__main__':
     video_display_column = sg.Column([quality_bar,
                                       image_display,
                                       analysis_buttons], 
-                                     element_justification='center')
+                                     element_justification='center',
+                                     background_color='#eeeeee')
     
     
-    label_checkboxes.insert(0, score)
-    label_checkboxes.append(comment_box)
+    label_column = [score] + label_checkboxes + [comment_box]
+    # label_checkboxes.insert(0, score)
+    # label_checkboxes.append(comment_box)
   
     
-    label_column = sg.Column(label_checkboxes)
+    label_column = sg.Column(label_column)
     
     
     layout = [[video_selection_column, video_display_column, label_column]]
@@ -305,9 +308,20 @@ if __name__=='__main__':
                                   size=(15,20),
                                   enable_events=True,
                                   key='similar-list')]]
+        
         image_display = [[sg.Image(data=similar_images_display[selected_image],
                                    key='similar-display')]]
-        layout = [[sg.Column(image_list), sg.Column(image_display)]]
+        
+        similar_labels = [[sg.Checkbox(text=label_dict['name'][i], 
+                                         key=label_dict['key'][i],
+                                         disabled=True,
+                                         checkbox_color=label_color[i],
+                                         text_color='#000000',
+                                         background_color='#dddddd',
+                                         font=('helvetica',20),
+                                         auto_size_text=True)] for i in range(len(label_dict['name']))]
+        
+        layout = [[sg.Column(image_list), sg.Column(image_display), sg.Column(similar_labels)]]
         similar_window = sg.Window('Similarity', layout, modal=True)
             
         while True:
@@ -332,6 +346,7 @@ if __name__=='__main__':
     selected_video = None
     database = None
     n_frame = 0
+    previous_data = None
 
     while True:
         event, values = window.read(timeout=100)
@@ -368,7 +383,7 @@ if __name__=='__main__':
                 video_data[selected_video], bfile_data[selected_video], dset_data[selected_video] = load_video_data(os.path.join(videos_dir, selected_video))
             
             # Load video labels
-            database = load_database(selected_video)
+            database, previous_data = load_database(selected_video)
             
             # Load labels on checkboxes, score and comment
             window.fill(database.loc[selected_video, label_dict['key']].to_dict())
@@ -395,7 +410,7 @@ if __name__=='__main__':
                 video_data[selected_video], bfile_data[selected_video], dset_data[selected_video] = load_video_data(os.path.join(videos_dir, selected_video))
             
             # Load video labels
-            database = load_database(selected_video)
+            database, previous_data = load_database(selected_video)
             
             # Load labels on checkboxes, score and comment
             window.fill(database.loc[selected_video, label_dict['key']].to_dict())
@@ -405,9 +420,12 @@ if __name__=='__main__':
         
         # Manually save changes
         if event == 'save':
-            database.loc[selected_video, 'comment'] = values['comment']
+            for key in label_dict['key']:
+                database.loc[selected_video, key] = int(values[key])
+            get_score(database)
+            database.loc[selected_video, 'comment'] = values['comment'] # save comment
             database_fname = 'labels/' + os.path.splitext(selected_video)[0] + '.csv'
-            database.to_csv(database_fname, sep=';')
+            database.to_csv(database_fname, sep=';') # write to csv
         
         
         # Show motion detection
@@ -421,8 +439,12 @@ if __name__=='__main__':
         
         # Go to test mode
         if event == 'test':
-            true_labels = database.loc[selected_video].iloc[:-2].astype('boolean').to_dict()
-            test_mode(true_labels)
+            database, previous_data = load_database(selected_video)
+            if previous_data == True:
+                true_labels = database.loc[selected_video].iloc[:-2].astype('boolean').to_dict()
+                test_mode(true_labels)
+            else:
+                sg.popup('There are no previously saved labels to compare with')
         
         
         # Pleura segmentation
