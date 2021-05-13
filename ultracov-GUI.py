@@ -14,6 +14,7 @@ import cv2
 import os
 import pandas as pd
 import numpy as np
+import requests
 
 from motion_detector_bin import motion_detection
 from mask_generator import load_model, load_img, predict, blend_mask
@@ -25,6 +26,20 @@ from video_player import get_img_data, load_video_data
 
 
 ##  AUXILIAR FUNCTIONS
+def get_files():
+    url = ''
+    directories = ['pleura', 'similarity']
+    for d in directories:
+        path = os.path.join(d, 'file_requirements.txt')
+        with open(path) as f:
+            files = f.readlines()
+        for f in files:
+            f = f.split('\n')[0]
+            print(f)
+            if not os.path.exists(os.path.join(d, f)):
+                print('getting', f)
+
+
 
 def get_score(database):
     """ Calculate score of a labelled region and updates database
@@ -67,6 +82,10 @@ def load_database(selected_video):
 if __name__=='__main__':
     
     ###  INITIALIZE
+    # Get required files
+    get_files()
+
+
     # Read list of .bin videos in selected directory
     videos_dir = 'videos'
     try:
