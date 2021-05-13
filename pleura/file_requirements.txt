@@ -1,2 +1,2 @@
-- pleura_model.h5
-- pleura_square_model.h5
+pleura_model.h5
+pleura_square_model.h5
