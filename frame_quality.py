@@ -10,7 +10,6 @@ Created on Wed May  5 10:18:56 2021
 
 import numpy as np
 from skimage import measure
-import fast_histogram
 
 
 
@@ -19,15 +18,12 @@ import fast_histogram
 def analyze_frame(frame, mask):
     " Get image quality parameters of input frame and mask "
     
-    not_null = frame[frame != frame.min()]
-    frame_histogram = fast_histogram.histogram1d(not_null, bins=50, range=(np.min(not_null),np.max(not_null)))
-    
     mask = np.int32(np.round(np.squeeze(mask)))
     mask_labels = measure.label(mask)
     mask_regions = measure.regionprops(mask_labels)
     mask_regions.sort(key=lambda x: x.area, reverse=True)
     
-    return frame_histogram, mask_labels, mask_regions
+    return mask_labels, mask_regions
 
 
 

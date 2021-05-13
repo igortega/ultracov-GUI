@@ -455,7 +455,7 @@ if __name__=='__main__':
             frame_analysis = analyze_frame(dset_frame, square_mask)
             
             ## Check image quality
-            if is_valid(frame_analysis[0], frame_analysis[1], frame_analysis[2]):
+            if is_valid(frame_analysis[0], frame_analysis[1]):
                 window['quality'].update(0) # Set green (valid)
             else:
                 window['quality'].update(1) # Set red (not valid)
