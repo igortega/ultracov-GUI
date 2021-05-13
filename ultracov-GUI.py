@@ -14,7 +14,8 @@ import cv2
 import os
 import pandas as pd
 import numpy as np
-import requests
+from zipfile import ZipFile
+from urllib.request import urlretrieve
 
 from motion_detector_bin import motion_detection
 from mask_generator import load_model, load_img, predict, blend_mask
@@ -27,17 +28,23 @@ from video_player import get_img_data, load_video_data
 
 ##  AUXILIAR FUNCTIONS
 def get_files():
-    url = ''
+    # download required files
+    url = 'url'
+    urlretrieve(url, 'required_files.zip')
+    
+    zfile = ZipFile('required_files.zip')
+    # extract files to each directory
     directories = ['pleura', 'similarity']
     for d in directories:
-        path = os.path.join(d, 'file_requirements.txt')
-        with open(path) as f:
+        requirements_path = os.path.join(d, 'file_requirements.txt')
+        with open(requirements_path) as f:
             files = f.readlines()
         for f in files:
-            f = f.split('\n')[0]
-            print(f)
-            if not os.path.exists(os.path.join(d, f)):
-                print('getting', f)
+            fname = f.split('\n')[0]
+            zfile.extract(fname, path=d)
+    
+    zfile.close()
+
 
 
 
@@ -83,7 +90,8 @@ if __name__=='__main__':
     
     ###  INITIALIZE
     # Get required files
-    get_files()
+    if not os.path.exists('required_files.zip'):
+        get_files()
 
 
     # Read list of .bin videos in selected directory

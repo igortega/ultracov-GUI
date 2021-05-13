@@ -79,61 +79,65 @@ def motion_detection(video_array,x1=0,x2=-1,z1=0,z2=-1):
     legend(fontsize=14);
     savefig('velocity.png')    
 
-if __name__=="__main__":
 
-    # filename=str(sys.argv[1])  #"pleura_desp_lat.mp4"ç
-    filename = r"C:\Principal\ultracov\bin-imu\left-right.bin"
-    # x1 = int(sys.argv[2])      
-    # x2 = int(sys.argv[3])
-    # z1 = int(sys.argv[4])
-    # z2 = int(sys.argv[5])
-    
-    # EJEMPLO DE INPUT
-    # python motion_detector_bin.py C:\ULTRACOV\Examinations\4\4_L6.bin 0 -1 0 -1      #Tomando todo el video
-    # python motion_detector_bin.py C:\ULTRACOV\Examinations\4\4_L6.bin 20 80 50 500   #Tomando Region sobre la pleura y sin bordes
-    
-    # Leo el archivo y genero un objeto 'BinFile' que contiene los datos crudos tal cual se leen del archivo
-    bfile = BinFile(filename)
 
-    # A partir del objeto 'BinFile' genero un objeto 'Dataset' que ya tiene los datos en formato 'cubo de datos'
-    # y contiene las matrices de coordenadas de los píxeles para poder pintar
-    dset = Dataset(bfile)
+
+
+# if __name__=="__main__":
+
+#     # filename=str(sys.argv[1])  #"pleura_desp_lat.mp4"ç
+#     filename = r"C:\Principal\ultracov\bin-imu\left-right.bin"
+#     # x1 = int(sys.argv[2])      
+#     # x2 = int(sys.argv[3])
+#     # z1 = int(sys.argv[4])
+#     # z2 = int(sys.argv[5])
     
-    # La funcion del flujo optico usa imagenes con formato UINT8 (0..255)
-    # Normalizamos los datos para adaptar a ese formato.
-    minimo = np.min(dset.bscan)
-    maximo = np.max(dset.bscan)    
-    video_array = (255*(dset.bscan-minimo)/(maximo-minimo)).astype('uint8')
+#     # EJEMPLO DE INPUT
+#     # python motion_detector_bin.py C:\ULTRACOV\Examinations\4\4_L6.bin 0 -1 0 -1      #Tomando todo el video
+#     # python motion_detector_bin.py C:\ULTRACOV\Examinations\4\4_L6.bin 20 80 50 500   #Tomando Region sobre la pleura y sin bordes
+    
+#     # Leo el archivo y genero un objeto 'BinFile' que contiene los datos crudos tal cual se leen del archivo
+#     bfile = BinFile(filename)
+
+#     # A partir del objeto 'BinFile' genero un objeto 'Dataset' que ya tiene los datos en formato 'cubo de datos'
+#     # y contiene las matrices de coordenadas de los píxeles para poder pintar
+#     dset = Dataset(bfile)
+    
+#     # La funcion del flujo optico usa imagenes con formato UINT8 (0..255)
+#     # Normalizamos los datos para adaptar a ese formato.
+#     minimo = np.min(dset.bscan)
+#     maximo = np.max(dset.bscan)    
+#     video_array = (255*(dset.bscan-minimo)/(maximo-minimo)).astype('uint8')
     
    
-    # # Pinto las imagenes en formato 'matriz' y con aspecto real
-    # figure(1).clf()
-    # ax1 = subplot(121) # Imagen matriz
-    # ax2 = subplot(122) # Imagen real
+#     # # Pinto las imagenes en formato 'matriz' y con aspecto real
+#     # figure(1).clf()
+#     # ax1 = subplot(121) # Imagen matriz
+#     # ax2 = subplot(122) # Imagen real
 
-    # for i in range(dset.nimg):
-    #     # Frame que voy a pintar
-    #     img = dset.bscan[:,:,i]
+#     # for i in range(dset.nimg):
+#     #     # Frame que voy a pintar
+#     #     img = dset.bscan[:,:,i]
 
-    #     # Pinto la imagen en formato 'matriz'
-    #     ax1.cla()
-    #     ax1.imshow(img, cmap='gray', interpolation='nearest', aspect='auto')
-    #     ax1.set_title('Imagen en formato matricial')
-    #     ax1.set_xlabel('Line number')
-    #     ax1.set_ylabel('Sample number')
+#     #     # Pinto la imagen en formato 'matriz'
+#     #     ax1.cla()
+#     #     ax1.imshow(img, cmap='gray', interpolation='nearest', aspect='auto')
+#     #     ax1.set_title('Imagen en formato matricial')
+#     #     ax1.set_xlabel('Line number')
+#     #     ax1.set_ylabel('Sample number')
 
-    #     # Pinto la imagen con su forma real
-    #     ax2.cla()
-    #     c = ax2.pcolormesh(dset.x, dset.z, img, cmap='gray')
-    #     ax2.axis('equal')
-    #     if i == 0:
-    #         cb = colorbar(c, ax = ax2)
-    #         cb.ax.set_title('dB')
-    #     ax2.set_title('Imagen real')
-    #     ax2.set_xlabel('x (mm)')
-    #     ax2.set_ylabel('z (mm)')
+#     #     # Pinto la imagen con su forma real
+#     #     ax2.cla()
+#     #     c = ax2.pcolormesh(dset.x, dset.z, img, cmap='gray')
+#     #     ax2.axis('equal')
+#     #     if i == 0:
+#     #         cb = colorbar(c, ax = ax2)
+#     #         cb.ax.set_title('dB')
+#     #     ax2.set_title('Imagen real')
+#     #     ax2.set_xlabel('x (mm)')
+#     #     ax2.set_ylabel('z (mm)')
 
-    #     # Actualizo
-    #     pause(0.001)
-    # print('Done!')
-    motion_detection(video_array)
+#     #     # Actualizo
+#     #     pause(0.001)
+#     # print('Done!')
+#     motion_detection(video_array)
