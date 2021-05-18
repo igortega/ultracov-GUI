@@ -243,13 +243,19 @@ if __name__ == '__main__':
                                      font=('helvetica', 20),
                                      auto_size_text=True)] for i in range(len(label_dict['name']))]
 
-    comment_box = [sg.Button('Save',
-                             key='save',
-                             font=('helvetica', 15),
-                             auto_size_button=True),
-                   sg.Input(key='comment',
+    # comment_box = [sg.Button('Save',
+    #                          key='save',
+    #                          font=('helvetica', 15),
+    #                          auto_size_button=True),
+    #                sg.Input(key='comment',
+    #                         size=(60, 60),
+    #                         font=('helvetica', 10),
+    #                         enable_events=True)]
+    " remove save button "
+    comment_box = [sg.Input(key='comment',
                             size=(60, 60),
-                            font=('helvetica', 10))]
+                            font=('helvetica', 10),
+                            enable_events=True)]
 
     video_selection_column = sg.Column([videos_listbox,
                                         frame_buttons])
@@ -381,8 +387,12 @@ if __name__ == '__main__':
             # Update score
             window['region-score'].update(str(get_score(database)))
 
+
         # Select new video
         if event == 'listbox':
+            if not database == None:
+                save_database(selected_video, database, comment)  # save previous video's labels
+
             selected_video = values['listbox'][0]
             n_frame = 0
 
@@ -426,6 +436,9 @@ if __name__ == '__main__':
         #     # window['region-score'].update(str(database.loc[selected_video, 'score']))
         #     window['comment'].update(value=comment)
 
+        if event == 'comment':
+            comment = values[event]  # update comment
+
 
         # Manually save changes
         if event == 'save':
@@ -455,6 +468,7 @@ if __name__ == '__main__':
 
         # Go to test mode
         if event == 'test':
+            save_database(selected_video, database, comment)
             database, comment, previous_data = load_database(selected_video)
             if previous_data == True:
                 test_mode(database)
