@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Mar  2 13:48:38 2021
+"""Generate pleura masks through neural network segmentation
 
-@author: Ignacio
-"""
-
-""" Loads trained model from .h5 file. 
-    Takes images as input.
-    Returns predicted pleura masks as output
+Pre-trained models are located in 'pleura' directory as .h5 files.
+Predictions can be made on both 'square' and 'sector' format images.
+A frame of a video is fed as input and its predicted pleura mask
+is returned as output.
 """
 
 import time
@@ -19,136 +16,147 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import io
 
-
-
+from file_functions import BinFile, Dataset
 
 
 def load_model(model_path):
-    """ Load trained segmentator model
-        INPUT:
-            - model_path: path to .h5 file
-        OUTPUT:
-            - model    """
-    start_time = time.time()
+    """Load pre-trained segmentation model
+
+    Parameters
+    ----------
+    model_path
+        Path to selected model
+
+    Returns
+    -------
+    model
+        Keras model object to be fed to predict() function
+    """
+
+    start_time = time.time()  # get model loading time
     print("Loading model:", model_path)
     model = tf.keras.models.load_model(model_path)
-    print("Size: %.2f MB" % (os.path.getsize(model_path)/1024/1024))
+    print("Size: %.2f MB" % (os.path.getsize(model_path)/1024/1024))  # get model size
     print("Model loading time: %.2f s" % (time.time()-start_time))
-    
+
     return model
 
 
+def prepare_for_predict(input_image):
+    """Convert image to proper format to be fed to segmentation model
 
- 
-def load_img(dset_frame):
-    """ Returns image in suitable format to feed model
-        INPUT:
-            - dset_frame: bidimensional numpy array to make prediction of. Range (-48, 0)
-        OUTPUT: 
-            - img_expanded: image in suitable format for model input  """
+    Parameters
+    ----------
+    input_image : array
+        Image to make mask prediction of in either 'square' or 'sector' format.
+
+    Returns
+    -------
+    prepared_image : array
+        Processed image ready to be fed to predict()
+    """
     
     # Resize (RES,RES)
     RES = 64
-    img_resized = cv2.resize(dset_frame, (RES,RES)) 
+    resized_image = cv2.resize(input_image, (RES, RES))
     # Normalize to (0,1) interval
-    img_norm = (img_resized-np.min(img_resized))/(np.max(img_resized)-np.min(img_resized))
+    minimum = np.min(resized_image)
+    maximum = np.max(resized_image)
+    normalized_image = (resized_image - minimum) / (maximum - minimum)
     # Expand dimensions to (1, RES, RES, 1)
-    img_expanded = np.expand_dims(np.expand_dims(img_norm, axis=0), axis=3)
-    # print(img_expanded.shape)
-    # input_img = img_expanded/65536 # 16 bit normalization
-    # input_img = img_expanded/48 + 1 # dB normalization
-    
-    return img_expanded
+    prepared_image = np.expand_dims(np.expand_dims(normalized_image, axis=0), axis=3)
+
+    return prepared_image
 
 
+def predict(prepared_image, model):
+    """Make pleura mask prediction of an image through a given model.
 
+    Parameters
+    ----------
+    prepared_image : array
+        Properly formatted and normalized image to make prediction of.
+    model
+        Preloaded chosen model through load_model() function.
 
-def predict(input_img, model):
-    """ Feeds input_img to model and returns mask prediction
-        INPUT:
-            - input_img: numpy array in suitable format and normalization
-            - model: segmentator model to make prediction with
-        OUTPUT:
-            - output_img: mask prediction for input_img in (64, 64) shape   """
+    Returns
+    -------
+    mask : array
+        Image of predicted pleura mask.
+    """
+
     # start_time = time.time()
-    prediction = model.predict(input_img)
-    output_img = prediction[0][:,:,0]
+    mask = model.predict(prepared_image, )[0][:, :, 0]
     # print("Mask generation time: %.2f s" % (time.time()-start_time))
     
-    return output_img
+    return mask
 
 
+def blend_mask(input_image, mask):
+    """Generate bytes image with blended highlighted mask
 
+    Parameters
+    ----------
+    input_image : array
+        Image to make mask prediction of in either 'square' or 'sector' format.
+    mask : array
+        Image of predicted pleura mask.
 
-def blend_mask(img, mask):
-    """ Blend original image and predicted pleura mask in a single image
-        INPUT:
-            -img: array of ground image
-            -mask: array of predicted pleura mask
-        OUTPUT:
-            -bimg: blended image in bytes for display """
-            
-    mask = 255 - mask # Reverse mask
-    
-    hlight = Image.new(mode='RGB',
-                       size=(img.shape[1], img.shape[0]), 
-                       color=(255,255,0))   # Yellow highlight
-    
-    a = Image.fromarray(img).convert('RGB')
-    b = Image.fromarray(mask)
-    
-    mix = Image.composite(a, hlight, b) # Generate blended image
+    Returns
+    -------
+    bytes_blended_image
+        Blend of input image and mask in bytes format (suitable for GUI display).
+    """
+
+    blend_size = (input_image.shape[1], input_image.shape[0])
+
+    highlight = Image.new(mode='RGB',
+                          size=blend_size,
+                          color=(255, 255, 0))   # Yellow highlight
+
+    mask = cv2.resize(src=255*mask, dsize=blend_size)  # mask originally normalized to (0,1)
+    mask = 255 - mask  # Reverse mask
+
+    # Normalize input image to (0,255)
+    minimum = np.min(input_image)
+    maximum = np.max(input_image)
+    normalized_image = 255*((input_image - minimum) / (maximum - minimum))
+
+    # Generate Image objects
+    image = Image.fromarray(normalized_image).convert('RGB')
+    mask = Image.fromarray(mask).convert('L')
+
+    blended_image = Image.composite(image, highlight, mask)  # Generate blended image
+
     # Convert to bytes
     bio = io.BytesIO()
-    mix.save(bio, format="PNG")
-    bimg = bio.getvalue()
-    return bimg
+    blended_image.save(bio, format="PNG")
+    bytes_blended_image = bio.getvalue()
+
+    return bytes_blended_image
 
 
+if __name__ == "__main__":
+    # Example
+    sector_model_path = r'pleura\pleura_sector_model.h5'
+    video_path = r"C:\Principal\ultracov\videos\4_R1_1.BIN"
 
+    # Load pretrained model
+    model = load_model(sector_model_path)
 
-# def analyze_mask(mask):
-#     mask = np.int32(np.round(np.squeeze(mask)))
-#     mask_labels = measure.label(mask)
-#     mask_regions = measure.regionprops(mask_labels)
-#     mask_regions.sort(key=lambda x: x.area, reverse=True)
-    
-#     # if len(regions) > 0:
-#     #     mask_info = [len(regions), regions[0].area, regions[0].centroid[0], regions[0].centroid[1]]
-#     # else:
-#     #     mask_info = [np.nan, np.nan, np.nan, np.nan]
-#     return mask_labels, mask_regions
+    # Get input image from video
+    bfile = BinFile(video_path)
+    dset = Dataset(bfile, resample=600)
+    dset.ScanConvert()  # Convert to sector format
+    input_sector_image = dset.frames[:, :, 0]
 
+    # Preprocess input image
+    prepared_image = prepare_for_predict(input_sector_image)
 
+    # Get mask
+    mask = predict(prepared_image, model)
 
-
-def plot_result(img, mask):
-    """ Show input image and predicted mask """
-    
-    if not img.shape == mask.shape:
-        mask = cv2.resize(mask, (img.shape[1], img.shape[0]))
-        
-    fig, (ax1,ax2) = plt.subplots(nrows=1, ncols=2)
-
-    ax1.cla()
-    ax1.imshow(img, cmap='gray')
-    ax1.axis('off')
-    ax1.set_title('input image')
-    
-    ax2.cla()
-    ax2.imshow(mask, cmap='gray')
-    ax2.axis('off')
-    ax2.set_title('predicted mask')
-
-
-
-
-# if __name__=="__main__":
-#     model_path = 'pleura_model.h5'
-#     video_path = r"C:\Principal\ultracov\videos\4_R1_1.BIN"   
-    
-#     # Get input image from video
-#     bfile = BinFile(video_path)
-#     dset = Dataset(bfile, resample=600)
-#     dset.ScanConvert() # Change to sector format
-    
+    # Plot result
+    fig, axs = plt.subplots(1, 2)
+    axs[0].imshow(input_sector_image)
+    axs[1].imshow(mask)

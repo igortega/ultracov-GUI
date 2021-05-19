@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar 16 10:12:59 2021
+Interfaz para etiquetar exploraciones y generar base de datos
 
-@author: Ignacio
 """
 
-""" Interfaz para etiquetar exploraciones y generar base de datos """
 
 import PySimpleGUI as sg
 import cv2
@@ -15,8 +13,8 @@ import numpy as np
 from zipfile import ZipFile
 from urllib.request import urlretrieve
 
-from motion_detector_bin import motion_detection
-from mask_generator import load_model, load_img, predict, blend_mask
+from motion_detection import motion_detection
+from mask_generator import load_model, prepare_for_predict, predict, blend_mask
 from similarity import init_similarity, find_similar
 from frame_quality import analyze_frame, is_valid
 from video_player import get_img_data, load_video_data
@@ -182,7 +180,7 @@ if __name__ == '__main__':
     dset_data = {}
 
     # Initialiaze pleura segmentation and similarity models
-    pleura_model = load_model('pleura/pleura_model.h5')
+    pleura_sector_model = load_model('pleura/pleura_sector_model.h5')
     pleura_square_model = load_model('pleura/pleura_square_model.h5')
     encoder, database_display, database_encoded, database_filenames = init_similarity()
 
@@ -500,7 +498,7 @@ if __name__ == '__main__':
 
             display_shape = dset_frame.shape  # get display shape
 
-            input_square_img = load_img(dset_square_frame)  # preprocess image for model input
+            input_square_img = prepare_for_predict(dset_square_frame)  # preprocess image for model input
 
             square_mask = predict(input_square_img, pleura_square_model)  # predict mask
             square_mask_resized = cv2.resize(src=square_mask,
@@ -524,16 +522,15 @@ if __name__ == '__main__':
 
             if pleura_mode == 'on':
                 # Generate mask
-                input_img = load_img(dset_frame)
+                input_img = prepare_for_predict(dset_frame)
 
-                mask = predict(input_img, pleura_model)
-                mask_resized = cv2.resize(src=mask,
-                                          dsize=(display_shape[1], display_shape[0]))  # resize mask to display shape
-                norm_mask_img = np.uint8(mask_resized * 255)
+                mask = predict(input_img, pleura_sector_model)
+                # mask_resized = cv2.resize(src=mask,
+                #                           dsize=(display_shape[1], display_shape[0]))  # resize mask to display shape
+                # norm_mask_img = np.uint8(mask_resized * 255)
 
                 ## Display blended mask
-                norm_input_img = dset_frame / 48 + 1
-                composite_img = blend_mask(np.uint8(norm_input_img * 255), norm_mask_img)
+                composite_img = blend_mask(dset_frame, mask)
                 window['display'].update(data=composite_img)
 
                 ## Display only mask
