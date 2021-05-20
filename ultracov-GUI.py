@@ -209,15 +209,6 @@ if __name__ == '__main__':
                                                          key='quality',
                                                          bar_color=['red', 'green'])]
 
-    frame_buttons = [sg.Button('Previous',
-                               key='prev',
-                               font=('helvetica', 15),
-                               auto_size_button=True),
-                     sg.Button('Next',
-                               key='next',
-                               font=('helvetica', 15),
-                               auto_size_button=True)]
-
     analysis_buttons = [sg.Button('Motion detection',
                                   key='motion',
                                   disabled=True),
@@ -255,8 +246,7 @@ if __name__ == '__main__':
                             font=('helvetica', 10),
                             enable_events=True)]
 
-    video_selection_column = sg.Column([videos_listbox,
-                                        frame_buttons])
+    video_selection_column = sg.Column([videos_listbox])
 
     video_display_column = sg.Column([quality_bar,
                                       image_display,
@@ -407,36 +397,8 @@ if __name__ == '__main__':
             window['region-score'].update(str(get_score(database)))
             window['comment'].update(value=comment)
 
-        # # Go to previous/next video
-        # if event in ('prev', 'next'):
-        #     if event == 'prev':
-        #         n_change = -1
-        #     if event == 'next':
-        #         n_change = +1
-        #
-        #     # Select new video
-        #     n_selection = video_list.index(selected_video)
-        #     n_selection = (n_selection + n_change) % len(video_list)
-        #     selected_video = video_list[n_selection]
-        #     window['listbox'].set_value(selected_video)
-        #     n_frame = 0
-        #
-        #     # Load video data
-        #     if not selected_video in video_data.keys():
-        #         video_data[selected_video], bfile_data[selected_video], dset_data[selected_video] = load_video_data(
-        #             os.path.join(videos_dir, selected_video))
-        #
-        #     # Load video labels
-        #     database, comment, previous_data = load_database(selected_video)
-        #
-        #     # Load labels on checkboxes, score and comment
-        #     window.fill(database.loc[selected_video, label_dict['key']].to_dict())
-        #     # window['region-score'].update(str(database.loc[selected_video, 'score']))
-        #     window['comment'].update(value=comment)
-
         if event == 'comment':
             comment = values[event]  # update comment
-
 
         # Manually save changes
         if event == 'save':
