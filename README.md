@@ -3,13 +3,14 @@ Graphical user interface for ULTRACOV ultrasound video analysis.
 
 ## INSTALLATION
 1. Download and install miniconda environment manager: https://docs.conda.io/en/latest/miniconda.html
-2. Download and extract all repository files to desired directory (eg: _C:\ultracov_)
-3. Open Anaconda Prompt and go to selected directory (eg: _$ cd C:\ultracov_)
-4. Create a new environment with required Python version: $ _conda create --name ultracov --file environment.txt_
-5. Wait for download and installation
-6. Activate environment: $ _conda activate ultracov_
-7. Install required packages: $ _pip install -r requirements.txt_
-8. Wait for download and installation
-9. Execute GUI: $ _python ultracov-GUI.py_
-10. Wait for required files to download (only when executed for the first time)
-11. Select directory containing .bin videos to be analysed
+2. Download and extract all repository files to desired directory (eg: _C:\ultracov_project_)
+3. Open Anaconda Prompt and go to selected directory (eg: _$ cd C:\ultracov_project_)
+4. Create a new environment with pip module: $ _conda create --name ultracov_env pip_
+5. Activate environment: $ _conda activate ultracov_env_
+6. Install ultracov package: $ _pip install ._
+7. Wait for download and installation
+8. Open a python terminal
+9. Import ultracov package # _import ultracov_
+10. Wait for required files to download
+11. Run GUI: # ultracov.ultracov_GUI.main()
+12. Select directory containing .bin videos to be analysed and a directory to save labels
