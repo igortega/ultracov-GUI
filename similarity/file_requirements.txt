@@ -1,4 +1,0 @@
-convAE_encoder_v2.h5
-database_display.npy
-database_encoded.npy
-database_filenames.npy

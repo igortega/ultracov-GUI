@@ -13,7 +13,7 @@ import cv2
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 
-from file_functions import BinFile, Dataset
+from ultracov.file_functions import BinFile, Dataset
 
 
 def motion_detection(video_array, x1=0, x2=-1, z1=0, z2=-1):
