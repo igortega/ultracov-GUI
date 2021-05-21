@@ -160,7 +160,7 @@ def main():
     # Initialiaze pleura segmentation and similarity models
     # here = os.path.split(ultracov.__file__)[0]
     print(ultracov.here)
-    sector_model_path = os.path.join(ultracov.here, 'pleura', 'pleura_sector_model.h5')
+    sector_model_path = os.path.join(ultracov.here, 'pleura', 'pleura_model.h5')
     square_model_path = os.path.join(ultracov.here, 'pleura', 'pleura_square_model.h5')
     pleura_sector_model = load_model(sector_model_path)
     pleura_square_model = load_model(square_model_path)
