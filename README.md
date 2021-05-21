@@ -10,7 +10,7 @@ Graphical user interface for ULTRACOV ultrasound video analysis.
 6. Install ultracov package: $ _pip install ._
 7. Wait for download and installation
 8. Open a python terminal
-9. Import ultracov package # _import ultracov_
+9. Import ultracov package # _from ultracov.ultracov_GUI  import main_
 10. Wait for required files to download
-11. Run GUI: # ultracov.ultracov_GUI.main()
+11. Run GUI: # main()
 12. Select directory containing .bin videos to be analysed and a directory to save labels
