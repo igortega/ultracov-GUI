@@ -1,0 +1,12 @@
+.idea
+__pycache__
+ultracov.egg-info
+ultracov/pleura/pleura_model.h5
+velocity.png
+ultracov/similarity/database_filenames.npy
+ultracov/similarity/database_encoded.npy
+ultracov/similarity/database_display.npy
+ultracov/similarity/convAE_encoder_v2.h5
+ultracov/required_files.zip
+ultracov/pleura/pleura_square_model.h5
+motion.dat
