@@ -62,11 +62,14 @@ def main():
             values = labels_data[1].split('\n')[0].split(';')
             values = [int(v) for v in values]
 
-            with open(comment_filepath) as f:
-                try:
-                    comment = f.readlines()[0]
-                except:
-                    comment = ''
+            if os.path.exists(comment_filepath):
+                with open(comment_filepath) as f:
+                    try:
+                        comment = f.readlines()[0]
+                    except:
+                        comment = ''
+            else:
+                comment = ''
 
             previous = True  # previous data exists
 
@@ -479,3 +482,7 @@ def main():
 
                 ## Display only mask
                 # window['display'].update(data=get_img_data(norm_mask_img))
+
+
+if __name__ == "__main__":
+    main()
