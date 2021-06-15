@@ -10,3 +10,4 @@ ultracov/similarity/convAE_encoder_v2.h5
 ultracov/required_files.zip
 ultracov/pleura/pleura_square_model.h5
 motion.dat
+*.h5

@@ -4,7 +4,6 @@ Interfaz para etiquetar exploraciones y generar base de datos
 
 """
 
-
 import PySimpleGUI as sg
 import cv2
 import os
@@ -16,22 +15,21 @@ from ultracov.mask_generator import load_model, prepare_for_predict, predict, bl
 from ultracov.similarity import init_similarity, find_similar
 from ultracov.frame_quality import analyze_frame, is_valid
 from ultracov.video_player import get_img_data, load_video_data
+from ultracov.lung_analysis import bin_to_key, get_analysis_labels
 
 
 def main():
     ##  AUXILIAR FUNCTIONS
-
-
 
     def get_score(database):
         """ Calculate score of a labelled region and updates database
             INPUT:
                 - database: DataFrame with video labels """
 
-        score3 = bool( sum( [int(database[key]) for key in ['effusion', 'consolidation-', 'consolidation+']] ) )
-        score2 = bool( sum( [int(database[key]) for key in ['confluent+']] ) )
-        score1 = bool( sum( [int(database[key]) for key in ['blines', 'confluent-']] ) )
-        score0 = bool( sum( [int(database[key]) for key in ['alines']] ) )
+        score3 = bool(sum([int(database[key]) for key in ['effusion', 'consolidation-', 'consolidation+']]))
+        score2 = bool(sum([int(database[key]) for key in ['confluent+']]))
+        score1 = bool(sum([int(database[key]) for key in ['blines', 'confluent-']]))
+        score0 = bool(sum([int(database[key]) for key in ['alines']]))
         empty = sum(list(map(int, database.values()))) == 0
 
         score_list = [score3, score2, score1, score0, empty]
@@ -43,16 +41,15 @@ def main():
         # database.loc[score3, 'score'] = 3
         return score
 
-
     def load_database(selected_video):
         """ Load previously saved labels and comment or generate new ones if they do not exist """
-        # label_list = [fname for fname in os.listdir(labels_dir) if os.path.splitext(fname)[-1] == '.csv']
+        # label_list = [fname for fname in os.listdir(selected_directory) if os.path.splitext(fname)[-1] == '.csv']
 
         database_filename = os.path.splitext(selected_video)[0] + '.csv'
         comment_filename = os.path.splitext(selected_video)[0] + '.txt'
 
-        database_filepath = os.path.join(labels_dir, database_filename)
-        comment_filepath = os.path.join(labels_dir, comment_filename)
+        database_filepath = os.path.join(selected_directory, database_filename)
+        comment_filepath = os.path.join(selected_directory, comment_filename)
 
         keys = label_dict['key']
         # Previously saved label database
@@ -80,7 +77,6 @@ def main():
             comment = ''
             previous = False  # previous data does not exist
 
-
         database = dict(zip(keys, values))
 
         if previous == False:  # generate blank labels and comment files
@@ -88,40 +84,34 @@ def main():
 
         return database, comment, previous
 
-
     def save_database(selected_video, database, comment):
         database_filename = os.path.splitext(selected_video)[0] + '.csv'
         comment_filename = os.path.splitext(selected_video)[0] + '.txt'
 
-        database_filepath = os.path.join(labels_dir, database_filename)
-        comment_filepath = os.path.join(labels_dir, comment_filename)
+        database_filepath = os.path.join(selected_directory, database_filename)
+        comment_filepath = os.path.join(selected_directory, comment_filename)
 
         keys = label_dict['key']
         with open(database_filepath, 'w') as f:
             keys_line = ';'.join(keys)
             values = list(database.values())
-            values_line = ';'.join(list(map(str,values)))
+            values_line = ';'.join(list(map(str, values)))
             f.writelines([keys_line + '\n', values_line])
             f.close()
 
         with open(comment_filepath, 'w') as f:
             f.write(comment)
 
-
-
-    ###  INITIALIZE
+    #  INITIALIZE
     'assume all required files are present'
     # # Get required files
     # if not os.path.exists('required_files.zip'):
     #     get_files()
 
     # Read list of .bin videos in selected directory
-    videos_dir = sg.popup_get_folder('Select video directory')
+    # selected_directory = sg.popup_get_folder('Select video directory')
 
-    video_list = [fname for fname in os.listdir(videos_dir) if os.path.splitext(fname)[-1] in ('.bin', '.BIN')]
-
-    # Select labels directory
-    labels_dir = sg.popup_get_folder('Select labels directory')
+    # video_list = [fname for fname in os.listdir(selected_directory) if os.path.splitext(fname)[-1] in ('.bin', '.BIN')]
 
     # Define labels
     label_dict = {'name': ['A-lines',
@@ -165,34 +155,44 @@ def main():
     print(ultracov.here)
     sector_model_path = os.path.join(ultracov.here, 'pleura', 'pleura_model.h5')
     square_model_path = os.path.join(ultracov.here, 'pleura', 'pleura_square_model.h5')
+    orientation_model_path = os.path.join(ultracov.here, 'orientation_model.h5')
+    region_model_path = os.path.join(ultracov.here, 'region_model.h5')
+    score_model_path = os.path.join(ultracov.here, 'score_model.h5')
+
     pleura_sector_model = load_model(sector_model_path)
     pleura_square_model = load_model(square_model_path)
+    orientation_model = load_model(orientation_model_path)
+    region_model = load_model(region_model_path)
+    score_model = load_model(score_model_path)
+
     encoder, database_display, database_encoded, database_filenames = init_similarity()
 
-    ##  WINDOW LAYOUT
-    videos_listbox = [sg.Listbox(values=video_list,
+    # LAYOUT ELEMENTS
+    select_directory_row = [sg.Text(text='No directory selected',
+                                    background_color='#ffffff',
+                                    text_color='#000000',
+                                    enable_events=True,
+                                    key='directory_text'),
+                            sg.Button(button_text='Select directory',
+                                      enable_events=True,
+                                      key='directory_button')]
+
+    videos_listbox = [sg.Listbox(values=[],
                                  key='listbox',
                                  size=(30, 20),
                                  enable_events=True,
                                  font=('helvetica', 15),
                                  auto_size_text=True)]
 
-    score_display = [sg.Text('Region score:',
-                     auto_size_text=True,
-                     font=('helvetica', 15)),
-             sg.Text(str('-'),
-                     key='region-score',
-                     auto_size_text=True,
-                     font=('helvetica', 15))]
-
     image_display = [sg.Image(key='display',
                               filename=os.path.join(ultracov.here, 'logo.png'),
                               background_color='#eeeeee')]
 
-    quality_bar = [sg.T('Image quality'), sg.ProgressBar(1,
-                                                         size=(15, 10),
-                                                         key='quality',
-                                                         bar_color=['red', 'green'])]
+    quality_bar = [sg.T('Image quality'),
+                   sg.ProgressBar(1,
+                                  size=(15, 10),
+                                  key='quality',
+                                  bar_color=['red', 'green'])]
 
     analysis_buttons = [sg.Button('Motion detection',
                                   key='motion',
@@ -207,31 +207,67 @@ def main():
                                   key='test',
                                   disabled=True)]
 
-    label_checkboxes = [[sg.Checkbox(text=label_dict['name'][i],
-                                     key=label_dict['key'][i],
-                                     enable_events=True,
-                                     disabled=True,
-                                     checkbox_color=label_color[i],
-                                     text_color='#000000',
-                                     background_color='#dddddd',
-                                     font=('helvetica', 20),
-                                     auto_size_text=True)] for i in range(len(label_dict['name']))]
+    # analysis_buttons2 = [sg.Button('Lung analysis',
+    #                                key='analysis',
+    #                                disabled=True)]
 
-    # comment_box = [sg.Button('Save',
-    #                          key='save',
-    #                          font=('helvetica', 15),
-    #                          auto_size_button=True),
-    #                sg.Input(key='comment',
-    #                         size=(60, 60),
-    #                         font=('helvetica', 10),
-    #                         enable_events=True)]
-    " remove save button "
+    # score_display = [sg.Text('Region score:',
+    #                          auto_size_text=True,
+    #                          font=('helvetica', 15)),
+    #                  sg.Text(str('-'),
+    #                          key='region-score',
+    #                          auto_size_text=True,
+    #                          font=('helvetica', 15))]
+
+    analysis_frame_layout = [[sg.Text(text='Region'),
+                              sg.Text(text='------',
+                                      auto_size_text=True,
+                                      key='analysis-region')],
+                             [sg.Text(text='Score'),
+                              sg.Text(text='-------',
+                                      auto_size_text=True,
+                                      key='analysis-score')],
+                             [sg.Text(text='Orientation'),
+                              sg.Text(text='-----------------',
+                                      auto_size_text=True,
+                                      key='analysis-orientation')]]
+
+    analysis_frame = [sg.Frame(title='Analysis',
+                               layout=analysis_frame_layout)]
+
+    label_frame_layout = [[sg.Text(text='Region'),
+                           sg.Text(text='------',
+                                   auto_size_text=True,
+                                   key='label-region')],
+                          [sg.Text(text='Score'),
+                           sg.Text(text='------',
+                                   auto_size_text=True,
+                                   key='label-score')]]
+
+    label_frame_layout += [[sg.Checkbox(text=label_dict['name'][i],
+                                        key=label_dict['key'][i],
+                                        enable_events=True,
+                                        disabled=True,
+                                        checkbox_color=label_color[i],
+                                        text_color='#000000',
+                                        background_color='#dddddd',
+                                        font=('helvetica', 20),
+                                        auto_size_text=True)] for i in range(len(label_dict['name']))]
+
+    # label_checkboxes_frame = [sg.Frame(title='Labels',
+    #                                    layout=label_frame_layout)]
+
+    label_frame = [sg.Frame(title='Labels',
+                            layout=label_frame_layout)]
+
     comment_box = [sg.Input(key='comment',
                             size=(60, 60),
                             font=('helvetica', 10),
                             enable_events=True)]
 
-    video_selection_column = sg.Column([videos_listbox])
+    # LAYOUT COLUMNS
+    video_selection_column = sg.Column([select_directory_row,
+                                        videos_listbox])
 
     video_display_column = sg.Column([quality_bar,
                                       image_display,
@@ -239,17 +275,14 @@ def main():
                                      element_justification='center',
                                      background_color='#eeeeee')
 
-    label_column = [score_display] + label_checkboxes + [comment_box]
-    # label_checkboxes.insert(0, score)
-    # label_checkboxes.append(comment_box)
-
-    label_column = sg.Column(label_column)
+    label_column = sg.Column([analysis_frame,
+                              label_frame,
+                              comment_box])
 
     layout = [[video_selection_column, video_display_column, label_column]]
 
     window = sg.Window('Herramienta etiquetado ULTRACOV',
                        layout)
-
 
     def test_mode(true_labels):
         label_checkboxes = [[sg.Checkbox(text=label_dict['name'][i],
@@ -278,7 +311,6 @@ def main():
                     else:
                         test_window[label].update(background_color='#00ff00')
         test_window.close()
-
 
     def similar_mode(similar_indices, database_display, database_filenames, n_images=4):
         """ Launch window for similar images display """
@@ -329,7 +361,6 @@ def main():
 
         similar_window.close()
 
-
     ##  MAIN WINDOW
     pleura_mode = 'off'
     i = 0
@@ -344,8 +375,26 @@ def main():
         if event == sg.WIN_CLOSED:
             break
 
-        # Activate label checkboxes and buttons
-        if not selected_video == None:
+        if event == 'directory_button':
+            selected_directory = sg.popup_get_folder('Select directory')
+            video_list = [fname for fname in os.listdir(selected_directory) if
+                          os.path.splitext(fname)[-1] in ('.bin', '.BIN')]
+
+            window['directory_text'].update(value=selected_directory)
+            window['listbox'].update(values=video_list)
+
+            selected_video = None
+            database = None
+            window['display'].update(filename=os.path.join(ultracov.here, 'logo.png'))
+            window['label-region'].update('-')
+            window['label-score'].update('-')
+
+            window['analysis-region'].update('-')
+            window['analysis-score'].update('-')
+            window['analysis-orientation'].update('-')
+
+        # Activate/deactivate label checkboxes and buttons
+        if selected_video is not None:
             for key in label_dict['key']:
                 window[key].update(disabled=False)
             window['motion'].update(disabled=False)
@@ -353,34 +402,53 @@ def main():
             window['similar'].update(disabled=False)
             window['test'].update(disabled=False)
 
+        else:
+            for key in label_dict['key']:
+                window[key].update(disabled=True)
+            window['motion'].update(disabled=True)
+            window['pleura_detect'].update(disabled=True)
+            window['similar'].update(disabled=True)
+            window['test'].update(disabled=True)
+
         # Tick checkbox
         if event in label_dict['key']:
             # database.loc[selected_video, event] = int(values[event])
             database[event] = int(values[event])  # update database
             # Update score
-            window['region-score'].update(str(get_score(database)))
-
+            window['label-score'].update(str(get_score(database)))
 
         # Select new video
         if event == 'listbox':
-            if not database == None:
+            if database is not None:
                 save_database(selected_video, database, comment)  # save previous video's labels
 
             selected_video = values['listbox'][0]
             n_frame = 0
 
             # Load video data
-            if not selected_video in video_data.keys():
+            if selected_video not in video_data.keys():
                 video_data[selected_video], bfile_data[selected_video], dset_data[selected_video] = load_video_data(
-                    os.path.join(videos_dir, selected_video))
+                    os.path.join(selected_directory, selected_video))
 
             # Load video labels
             database, comment, previous_data = load_database(selected_video)
 
+            # Perform analysis
+            key_frames = bin_to_key(dset_data[selected_video])
+            predicted_orientation_label, predicted_region_label, predicted_score = get_analysis_labels(key_frames,
+                                                                                                       orientation_model,
+                                                                                                       region_model,
+                                                                                                       score_model)
             # Load labels on checkboxes, score and comment
             window.fill(database)
-            window['region-score'].update(str(get_score(database)))
+            window['label-score'].update(str(get_score(database)))
+            selected_video_region = selected_video.split('_')[1]
+            window['label-region'].update(value=selected_video_region)
             window['comment'].update(value=comment)
+
+            window['analysis-score'].update(str(predicted_score))
+            window['analysis-region'].update(predicted_region_label)
+            window['analysis-orientation'].update(predicted_orientation_label)
 
         if event == 'comment':
             comment = values[event]  # update comment
@@ -415,7 +483,7 @@ def main():
         if event == 'test':
             save_database(selected_video, database, comment)
             database, comment, previous_data = load_database(selected_video)
-            if previous_data == True:
+            if previous_data:
                 test_mode(database)
             else:
                 sg.popup('There are no previously saved labels to compare with')
@@ -434,8 +502,8 @@ def main():
 
             similar_mode(similar_indices, database_display, database_filenames)
 
-        #### Update displayed image (if video selected)
-        if not selected_video == None:
+        # Update displayed image (if video selected)
+        if selected_video is not None:
             n_frame = i % len(video_data[selected_video])
             i += 1  # Advance one frame
 

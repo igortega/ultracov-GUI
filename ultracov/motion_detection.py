@@ -99,6 +99,7 @@ def motion_detection(video_array, x1=0, x2=-1, z1=0, z2=-1):
     dxvf = savgol_filter(np.squeeze(dxv), 5, 3)  # Filtro (opcional)
 
     # Pinto las imagenes en formato 'matriz' y con aspecto real
+    plt.ioff()
     plt.figure(2).clf()
     plt.plot(dxvf, label='Velocity')
     plt.xlabel('frame', fontsize=14)
