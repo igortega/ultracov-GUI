@@ -1,18 +1,9 @@
-import sys
-import numpy as np
-import cv2
-from matplotlib.pyplot import *
-#from matplotlib import animation
-#from matplotlib.animation import FuncAnimation, PillowWriter
-from scipy.signal import savgol_filter
 
-from file_functions import BinFile, Dataset  #From Jorge to read bin files
+import numpy as np
+from ultracov.file_functions import BinFile, Dataset  #From Jorge to read bin files
 from skimage.transform import resize
-import os
-from shutil import copy
 from sklearn.cluster import KMeans
 from scipy.cluster.vq import vq
-import csv
 import tensorflow as tf
 
 

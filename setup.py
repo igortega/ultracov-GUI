@@ -14,7 +14,8 @@ setup(
         'matplotlib==3.4.2',
         'Pillow==8.2.0',
         'tensorflow==2.5.0rc3',
-        'scikit-image==0.18.1'
+        'scikit-image==0.18.1',
+        'scikit-learn==0.24.2'
     ],
     include_package_data=True
 )
