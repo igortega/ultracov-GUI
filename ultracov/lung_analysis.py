@@ -53,9 +53,9 @@ def get_analysis_labels(key_frames, orientation_model, region_model, score_model
     predicted_score = round(np.argmax(predicted_score, axis=1).max())
 
     if predicted_orientation == 0:
-        predicted_orientation_label = 'transversal'
-    else:
         predicted_orientation_label = 'longitudinal'
+    else:
+        predicted_orientation_label = 'transversal'
 
     if predicted_region < 6:
         predicted_region_label = 'L'

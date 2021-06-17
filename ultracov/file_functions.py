@@ -277,7 +277,7 @@ class Dataset:
     fps: int  # Frames por segundo del video
     dB_range: float  # Rango dinámico de la imagen
 
-    def __init__(self, binFile: BinFile, avg_kernel=7, med_kernel=3, resample=1000, new_db_range=0, data=True):
+    def __init__(self, binFile: BinFile, avg_kernel=0, med_kernel=3, resample=1000, new_db_range=0, data=True):
 
         # Si resample > 0 se reduce el número de muestras en la dirección de propagación a ese valor (aproximadamente)
         # Es para evitar trabajar con imágenes sobre-muestreadas, que enlentecen el procesamiento

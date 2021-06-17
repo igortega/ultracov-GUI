@@ -26,9 +26,9 @@ def main():
             INPUT:
                 - database: DataFrame with video labels """
 
-        score3 = bool(sum([int(database[key]) for key in ['effusion', 'consolidation-', 'consolidation+']]))
-        score2 = bool(sum([int(database[key]) for key in ['confluent+']]))
-        score1 = bool(sum([int(database[key]) for key in ['blines', 'confluent-']]))
+        score3 = bool(sum([int(database[key]) for key in ['effusion', 'consolidation -', 'consolidation +']]))
+        score2 = bool(sum([int(database[key]) for key in ['confluent +']]))
+        score1 = bool(sum([int(database[key]) for key in ['blines', 'confluent -']]))
         score0 = bool(sum([int(database[key]) for key in ['alines']]))
         empty = sum(list(map(int, database.values()))) == 0
 
@@ -123,11 +123,11 @@ def main():
                            'Consolidation'],
                   'key': ['alines',
                           'blines',
-                          'confluent-',
-                          'confluent+',
+                          'confluent -',
+                          'confluent +',
                           'effusion',
-                          'consolidation-',
-                          'consolidation+']}
+                          'consolidation -',
+                          'consolidation +']}
 
     label_color = ['#00fe00',
                    '#fffe00',
